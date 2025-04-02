@@ -6,7 +6,7 @@ import requests
 st.set_page_config(page_title="Meta Reklam Paneli", layout="centered")
 st.title("📊 Meta Reklam Verisi Analiz Paneli")
 
-# ✅ JavaScript ile hash içindeki access_token'ı al ve URL query'ye aktar
+# ✅ JavaScript ile hash içindeki access_token'ı al ve iframe ile yönlendir
 if "access_token" not in st.session_state:
     components.html(
         """
@@ -14,7 +14,10 @@ if "access_token" not in st.session_state:
             const tokenMatch = window.location.hash.match(/access_token=([^&]+)/);
             if (tokenMatch) {
                 const token = tokenMatch[1];
-                window.location.href = window.location.origin + '/?token=' + token;
+                const iframe = document.createElement('iframe');
+                iframe.style.display = 'none';
+                iframe.src = window.location.origin + '/?token=' + token;
+                document.body.appendChild(iframe);
             }
         </script>
         """,
