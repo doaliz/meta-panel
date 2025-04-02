@@ -25,11 +25,14 @@ token_redirect_script = stj.st_javascript("""
     }
 """)
 
-token_from_url = st.query_params.get("token")
+# Güçlü kontrol: token'ı query param'dan al ve session'a yaz
+query_params = st.experimental_get_query_params()
+token_from_url = query_params.get("token", [None])[0]
 
 if token_from_url and "access_token" not in st.session_state:
     st.session_state.access_token = token_from_url
-    st.success("✅ Access token yakalandı ve kaydedildi!")
+    st.experimental_set_query_params()  # URL'yi temizle
+    st.experimental_rerun()  # Sayfayı yeniden başlat
 
 if "access_token" not in st.session_state:
     st.markdown(f"[👉 Facebook ile Giriş Yap]({login_url})")
