@@ -12,26 +12,28 @@ SCOPES = "ads_read,business_management,pages_show_list,public_profile"
 
 login_url = f"https://www.facebook.com/v18.0/dialog/oauth?client_id={APP_ID}&redirect_uri={REDIRECT_URI}&scope={SCOPES}&response_type=token&display=popup"
 
-if "access_token" not in st.session_state:
-    st.session_state.access_token = None
-
-if not st.session_state.access_token:
-    st.markdown(f"[👉 Facebook ile Giriş Yap]({login_url})")
-    result = stj.st_javascript("""
-        async () => {
-            const tokenMatch = window.location.hash.match(/access_token=([^&]+)/);
-            if (tokenMatch) {
-                return tokenMatch[1];
-            }
-            return null;
+# Token URL hash'ten alınıp query param olarak eklensin ve session'a yazılsın
+token_redirect_script = stj.st_javascript("""
+    async () => {
+        const tokenMatch = window.location.hash.match(/access_token=([^&]+)/);
+        if (tokenMatch) {
+            const token = tokenMatch[1];
+            const newUrl = window.location.href.replace(window.location.hash, "") + `?token=${token}`;
+            window.location.href = newUrl;
         }
-    """)
-    if result and result != "null":
-        st.session_state.access_token = result
-        st.success("✅ Token alındı!")
-        st.code(result)  # Token'ı ekrana yazdır (DEBUG için)
+        return null;
+    }
+""")
 
-if st.session_state.access_token:
+token_from_url = st.query_params.get("token")
+
+if token_from_url and "access_token" not in st.session_state:
+    st.session_state.access_token = token_from_url
+    st.success("✅ Access token yakalandı ve kaydedildi!")
+
+if "access_token" not in st.session_state:
+    st.markdown(f"[👉 Facebook ile Giriş Yap]({login_url})")
+else:
     access_token = st.session_state.access_token
 
     test = requests.get(f"https://graph.facebook.com/me?access_token={access_token}")
