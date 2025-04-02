@@ -12,19 +12,22 @@ SCOPES = "ads_read,business_management,pages_show_list,public_profile"
 
 login_url = f"https://www.facebook.com/v18.0/dialog/oauth?client_id={APP_ID}&redirect_uri={REDIRECT_URI}&scope={SCOPES}&response_type=token&display=popup"
 
-# Token yakala, localStorage'a yaz ve URL'yi temizle
+# Token yakala, debug loglarını göster
 result = stj.st_javascript("""
     async () => {
         const tokenMatch = window.location.hash.match(/access_token=([^&]+)/);
         if (tokenMatch) {
-            localStorage.setItem('fb_token', tokenMatch[1]);
+            const token = tokenMatch[1];
+            console.log("📦 TOKEN FOUND:", token);
+            localStorage.setItem('fb_token', token);
             window.location.href = window.location.href.split('#')[0];
         }
-        return localStorage.getItem('fb_token');
+        const stored = localStorage.getItem('fb_token');
+        console.log("📦 STORED TOKEN:", stored);
+        return stored;
     }
 """)
 
-# Token session'a yazıldı mı?
 if result and "access_token" not in st.session_state:
     st.session_state.access_token = result
     st.experimental_rerun()
