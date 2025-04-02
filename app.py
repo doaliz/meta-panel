@@ -1,33 +1,46 @@
 import streamlit as st
-import streamlit_javascript as stj
+import streamlit.components.v1 as components
 import pandas as pd
 import requests
 
 st.set_page_config(page_title="Meta Reklam Paneli", layout="centered")
 st.title("📊 Meta Reklam Verisi Analiz Paneli")
 
-# ✅ Token localStorage'dan okunur ve session'a yazılır
+# ✅ JavaScript ile hash içindeki access_token'ı al ve URL query'ye aktar
 if "access_token" not in st.session_state:
-    token = stj.st_javascript("""
-        async () => {
-            return localStorage.getItem("fb_token");
-        }
-    """)
-    if token:
-        st.session_state.access_token = token
-        st.experimental_rerun()
-    else:
-        st.warning("Token alınamadı. Lütfen tekrar giriş yapın.")
-        st.markdown("[👉 Facebook ile Giriş Yap](https://www.facebook.com/v18.0/dialog/oauth?client_id=2162760587483637&redirect_uri=https://keremyavas.streamlit.app/login&scope=ads_read,business_management,pages_show_list,public_profile&response_type=token&display=popup)")
-        st.stop()
+    components.html(
+        """
+        <script>
+            const tokenMatch = window.location.hash.match(/access_token=([^&]+)/);
+            if (tokenMatch) {
+                const token = tokenMatch[1];
+                window.location.href = window.location.origin + '/?token=' + token;
+            }
+        </script>
+        """,
+        height=0
+    )
 
-# ✅ Token varsa devam
+# ✅ token query parametresinden alınır ve session'a yazılır
+token_param = st.query_params.get("token")
+if token_param and "access_token" not in st.session_state:
+    st.session_state.access_token = token_param
+    st.experimental_rerun()
+
+# ✅ Token yoksa girişe yönlendir
+if "access_token" not in st.session_state:
+    login_url = "https://www.facebook.com/v18.0/dialog/oauth?client_id=2162760587483637&redirect_uri=https://keremyavas.streamlit.app/&scope=ads_read,business_management,pages_show_list,public_profile&response_type=token&display=popup"
+    st.warning("Token alınamadı. Lütfen tekrar giriş yapın.")
+    st.markdown(f"[👉 Facebook ile Giriş Yap]({login_url})")
+    st.stop()
+
+# ✅ Token mevcut, kontrol et ve devam et
 access_token = st.session_state.access_token
 test = requests.get(f"https://graph.facebook.com/me?access_token={access_token}")
 if test.status_code != 200:
     st.error("❌ Token geçersiz veya süresi dolmuş olabilir.")
     st.session_state.access_token = None
-    st.markdown("[👉 Facebook ile Giriş Yap](https://www.facebook.com/v18.0/dialog/oauth?client_id=2162760587483637&redirect_uri=https://keremyavas.streamlit.app/login&scope=ads_read,business_management,pages_show_list,public_profile&response_type=token&display=popup)")
+    st.markdown(f"[👉 Facebook ile Giriş Yap]({login_url})")
     st.stop()
 
 st.success("🔓 Facebook erişimi sağlandı!")
