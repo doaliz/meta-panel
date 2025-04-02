@@ -18,7 +18,7 @@ if "access_token" not in st.session_state:
 if not st.session_state.access_token:
     st.markdown(f"[👉 Facebook ile Giriş Yap]({login_url})")
     result = stj.st_javascript("""
-        async function() {
+        async () => {
             const tokenMatch = window.location.hash.match(/access_token=([^&]+)/);
             if (tokenMatch) {
                 return tokenMatch[1];
