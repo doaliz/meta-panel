@@ -1,15 +1,21 @@
 import streamlit as st
 import pandas as pd
 import requests
+import streamlit_javascript as stj
 
 st.set_page_config(page_title="Meta Reklam Paneli", layout="centered")
 st.title("📊 Meta Reklam Verisi Analiz Paneli")
 
-# ✅ Token query param'dan gelirse session'a yaz
-query_token = st.query_params.get("token")
-if query_token and "access_token" not in st.session_state:
-    st.session_state.access_token = query_token
-    st.experimental_rerun()
+# ✅ Token localStorage'dan okunur ve session'a yazılır
+if "access_token" not in st.session_state:
+    result = stj.st_javascript("""
+        async () => {
+            return localStorage.getItem("fb_token");
+        }
+    """)
+    if result:
+        st.session_state.access_token = result
+        st.experimental_rerun()
 
 APP_ID = "2162760587483637"
 REDIRECT_URI = "https://keremyavas.streamlit.app/login"
