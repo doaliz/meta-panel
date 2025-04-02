@@ -25,8 +25,8 @@ token_redirect_script = stj.st_javascript("""
     }
 """)
 
-# Güçlü kontrol: token'ı query param'dan al ve session'a yaz
-query_params = st.experimental_get_query_params()
+# Güncel: query_params modern yöntemle alınıyor
+query_params = st.query_params
 token_from_url = query_params.get("token", [None])[0]
 
 if token_from_url and "access_token" not in st.session_state:
