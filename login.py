@@ -1,20 +1,23 @@
 import streamlit as st
-import streamlit_javascript as stj
+import streamlit.components.v1 as components
 
 st.set_page_config(page_title="Facebook Giriş", layout="centered")
 st.title("🔑 Facebook Giriş")
 
-st.markdown("Giriş işlemi yapılıyor... Lütfen bekleyin.")
+st.markdown("Giriş yapılıyor... Lütfen bekleyin.")
 
-# 1. Adım: Token'ı hash kısmından alıp URL query'e yaz
-result = stj.st_javascript("""
-    async () => {
+components.html(
+    """
+    <script>
         const tokenMatch = window.location.hash.match(/access_token=([^&]+)/);
         if (tokenMatch) {
             const token = tokenMatch[1];
             const newUrl = window.location.origin + "/?token=" + token;
             window.location.href = newUrl;
+        } else {
+            document.write("Access token bulunamadı.");
         }
-        return null;
-    }
-""")
+    </script>
+    """,
+    height=0,
+)
