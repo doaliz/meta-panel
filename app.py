@@ -1,5 +1,3 @@
-# streamlit_meta_panel/app.py
-
 import streamlit as st
 import pandas as pd
 import requests
@@ -9,7 +7,7 @@ st.set_page_config(page_title="Meta Reklam Paneli", layout="centered")
 st.title("📊 Meta Reklam Verisi Analiz Paneli")
 
 APP_ID = "2162760587483637"
-REDIRECT_URI = "https://keremyavas.streamlit.app/"  # Streamlit Cloud URL
+REDIRECT_URI = "https://keremyavas.streamlit.app/"
 SCOPES = "ads_read,business_management,pages_show_list,public_profile"
 
 login_url = f"https://www.facebook.com/v18.0/dialog/oauth?client_id={APP_ID}&redirect_uri={REDIRECT_URI}&scope={SCOPES}&response_type=token&display=popup"
@@ -17,7 +15,6 @@ login_url = f"https://www.facebook.com/v18.0/dialog/oauth?client_id={APP_ID}&red
 if "access_token" not in st.session_state:
     st.session_state.access_token = None
 
-# Token yoksa giriş linki + JS ile access_token yakala
 if not st.session_state.access_token:
     st.markdown(f"[👉 Facebook ile Giriş Yap]({login_url})")
     result = stj.st_javascript("""
@@ -31,8 +28,9 @@ if not st.session_state.access_token:
     """)
     if result and result != "null":
         st.session_state.access_token = result
+        st.success("✅ Token alındı!")
+        st.code(result)  # Token'ı ekrana yazdır (DEBUG için)
 
-# Token varsa devam
 if st.session_state.access_token:
     access_token = st.session_state.access_token
 
@@ -65,6 +63,6 @@ if st.session_state.access_token:
             st.error("Hesaplar çekilemedi. Geçerli hesap bulunamadı.")
             st.json(data)
     else:
-        st.error("Token geçersiz. Lütfen yeniden giriş yapın.")
+        st.error("❌ Token geçersiz veya süresi dolmuş olabilir.")
         st.session_state.access_token = None
         st.markdown(f"[👉 Facebook ile Giriş Yap]({login_url})")
