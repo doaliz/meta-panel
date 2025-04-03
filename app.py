@@ -1,46 +1,33 @@
 import streamlit as st
-import requests
-import json
+import urllib.parse
 
-# Sayfa ayarları
-st.set_page_config(page_title="Meta Reklam Verisi Analiz Paneli", layout="centered")
+st.set_page_config(page_title="Meta Reklam Verisi Analiz Paneli", page_icon="📊", layout="centered")
 
-st.markdown("""
-<h1>📊 Meta Reklam Verisi Analiz Paneli</h1>
-""", unsafe_allow_html=True)
+st.markdown("<h1 style='text-align: center;'>📊 Meta Reklam Verisi Analiz Paneli</h1>", unsafe_allow_html=True)
 
-# ✅ Query params ile token yakalama
-query_params = st.query_params
-access_token = None
+def get_access_token():
+    # URL'deki access_token'ı al
+    query_params = st.query_params
+    full_url = st.experimental_get_query_params()
+    fragment = st.experimental_get_query_params().get("access_token", [None])[0]
 
-if "access_token" in query_params:
-    token_string = query_params["access_token"]
-    if isinstance(token_string, list):
-        token_string = token_string[0]
-    access_token = token_string.split("&")[0]
-
-# Kullanıcıya bilgi verme
-if access_token:
-    st.success("✅ Token alındı!")
-
-    # ➤ Facebook API'den hesapları çekme
-    url = f"https://graph.facebook.com/v18.0/me/adaccounts?access_token={access_token}"
-    response = requests.get(url)
-
-    if response.status_code == 200:
-        hesaplar = response.json()
-        st.json(hesaplar)
+    if fragment:
+        return fragment
     else:
-        st.error("❌ Hesaplar çekilemedi. Token geçersiz veya süresi dolmuş olabilir.")
-        st.code(response.text, language="json")
+        return None
 
+token = get_access_token()
+
+if token:
+    st.success("✅ Token alındı!")
+    st.write("Token:", token)
+    # Buraya token ile işlem yapılacak kısım entegre edilir
 else:
     st.warning("⚠️ Token alınamadı. Lütfen tekrar giriş yapın.")
-    login_url = (
-        "https://www.facebook.com/v18.0/dialog/oauth"
-        "?client_id=2162760587483637"
-        "&redirect_uri=http://49.12.213.210:8501/"
-        "&scope=ads_read,business_management,pages_show_list,public_profile"
-        "&response_type=token&display=popup"
-    )
-    st.markdown(f"👉 [Facebook ile Giriş Yap]({login_url})")
+    # Kullanıcıyı Facebook login'e yönlendirecek bağlantı
+    client_id = "2162760587483637"
+    redirect_uri = "http://49.12.213.210:8501"
+    scope = "ads_read,business_management,pages_show_list,public_profile"
+    oauth_url = f"https://www.facebook.com/v18.0/dialog/oauth?client_id={client_id}&redirect_uri={urllib.parse.quote(redirect_uri)}&scope={scope}&response_type=token&display=popup"
+    
+    st.markdown(f"👉 [Facebook ile Giriş Yap]({oauth_url})")
