@@ -1,33 +1,51 @@
 import streamlit as st
+import requests
 import urllib.parse
 
-st.set_page_config(page_title="Meta Reklam Verisi Analiz Paneli", page_icon="📊", layout="centered")
+# Sayfa ayarı
+st.set_page_config(page_title="Meta Reklam Verisi", layout="centered")
 
-st.markdown("<h1 style='text-align: center;'>📊 Meta Reklam Verisi Analiz Paneli</h1>", unsafe_allow_html=True)
+st.title("📊 Meta Reklam Verisi Analiz Paneli")
 
-def get_access_token():
-    # URL'deki access_token'ı al
-    query_params = st.query_params
-    full_url = st.experimental_get_query_params()
-    fragment = st.experimental_get_query_params().get("access_token", [None])[0]
+# ✅ Token yakalama (query string üzerinden)
+query_params = st.query_params
+access_token = None
 
-    if fragment:
-        return fragment
-    else:
-        return None
+if "access_token" in query_params:
+    token_string = query_params["access_token"]
+    if isinstance(token_string, list):
+        token_string = token_string[0]
+    access_token = token_string.split("&")[0]  # sadece token'ı al
 
-token = get_access_token()
-
-if token:
+# ✅ Token varsa işlem yap
+if access_token:
     st.success("✅ Token alındı!")
-    st.write("Token:", token)
-    # Buraya token ile işlem yapılacak kısım entegre edilir
+    st.code(access_token, language="bash")
+
+    # Facebook API'den hesap bilgilerini çek
+    url = f"https://graph.facebook.com/v18.0/me/adaccounts?access_token={access_token}"
+    response = requests.get(url)
+
+    if response.status_code == 200:
+        hesaplar = response.json()
+        st.subheader("📂 Hesaplar")
+        for hesap in hesaplar.get("data", []):
+            st.write(f"🔹 {hesap['name']} — {hesap['id']}")
+    else:
+        st.error("❌ API isteği başarısız oldu.")
+        st.code(response.text, language="json")
+
+# ✅ Token yoksa login ekranı göster
 else:
-    st.warning("⚠️ Token alınamadı. Lütfen tekrar giriş yapın.")
-    # Kullanıcıyı Facebook login'e yönlendirecek bağlantı
+    st.warning("⚠️ Token alınamadı. Lütfen Facebook ile giriş yapın.")
     client_id = "2162760587483637"
     redirect_uri = "http://49.12.213.210:8501"
     scope = "ads_read,business_management,pages_show_list,public_profile"
-    oauth_url = f"https://www.facebook.com/v18.0/dialog/oauth?client_id={client_id}&redirect_uri={urllib.parse.quote(redirect_uri)}&scope={scope}&response_type=token&display=popup"
-    
-    st.markdown(f"👉 [Facebook ile Giriş Yap]({oauth_url})")
+
+    login_url = (
+        f"https://www.facebook.com/v18.0/dialog/oauth?"
+        f"client_id={client_id}&redirect_uri={urllib.parse.quote(redirect_uri)}"
+        f"&scope={scope}&response_type=token&display=popup"
+    )
+
+    st.markdown(f"👉 [Facebook ile Giriş Yap]({login_url})")
