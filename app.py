@@ -39,7 +39,7 @@ if access_token:
 else:
     st.warning("⚠️ Token alınamadı. Lütfen Facebook ile giriş yapın.")
     client_id = "2162760587483637"
-    redirect_uri = "http://49.12.213.210:8501"
+    redirect_uri = "https://49.12.213.210:8501"
     scope = "ads_read,business_management,pages_show_list,public_profile"
 
     login_url = (
